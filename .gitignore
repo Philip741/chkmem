@@ -1,6 +1,6 @@
 # Zig build outputs
 zig-out/
-zig-cache/
+.zig-cache/
 
 # Compiled Object files
 *.o
