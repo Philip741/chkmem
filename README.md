@@ -4,7 +4,11 @@ A simple command-line utility written in Zig for displaying system memory inform
 
 ## Overview
 
-`memcli` is a lightweight tool that provides quick insights into your system's memory usage. It offers different output formats based on your needs, making it easy to integrate into monitoring scripts or for quick checks from the terminal.
+`memcli` is a lightweight cli tool that outputs memory in bytes, Kilobytes, and Megabytes. The Linux version just reads
+from /proc/meminfo using the process module in Zig. This project is one of many for me to learn Zig syntax and internals.
+
+## Platforms
+Linux only currently but plan to add others
 
 ## Installation
 
