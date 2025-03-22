@@ -1,0 +1,54 @@
+const std = @import("std");
+
+pub fn main() !void {
+    // var gpa = std.heap.GeneralPurposeAllocator.init(.{});
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    const allocator = gpa.allocator();
+    defer _ = gpa.deinit();
+    //defer {
+    //  const deinit_status = gpa.deinit();
+    //if (deinit_status == .leak) std.debug.print("Memory leak detected\n ",.{});
+    //}
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+
+    const args = try std.process.argsAlloc(arena.allocator());
+
+    // print help usage if only command is supplied
+    if (args.len < 2) {
+        printUsage(args[0]);
+    }
+
+    try executeArgs(args);
+    // using try bubbles up the error to the containing function
+}
+// []const []const u8 is a slice of slices , []const u8 is a string in zig
+fn executeArgs(args: []const []const u8) !void {
+    const systemRam: u64 = try std.process.totalSystemMemory();
+    const ramMb = systemRam / (1024 * 1024);
+    const ramKb = systemRam / 1024;
+
+    // Process each argument using a for loop
+    // Skip args[0] which is the program name
+    for (args[1..]) |arg| {
+        if (std.mem.eql(u8, arg, "-total")) {
+            std.debug.print("Total system RAM bytes: {}\n", .{systemRam});
+        } else if (std.mem.eql(u8, arg, "-kb")) {
+            std.debug.print("Total system RAM KB: {}\n", .{ramKb});
+        } else if (std.mem.eql(u8, arg, "-mb")) {
+            std.debug.print("Total system RAM MB: {}\n", .{ramMb});
+        } else {
+            std.debug.print("Unknown argument: {s}\n", .{arg});
+            printUsage(args[0]);
+        }
+    }
+}
+
+fn printUsage(program_name: []const u8) void {
+    std.debug.print("Usage {s} [options]\n", .{program_name});
+    std.debug.print("Options:\n", .{});
+    std.debug.print("  -total - Print total RAM in bytes\n", .{});
+    std.debug.print("  -kb    - Print total RAM in kilobytes\n", .{});
+    std.debug.print("  -mb    - Print total RAM in megabytes\n", .{});
+    std.debug.print("Example: {s} total kb mb\n", .{program_name});
+}
