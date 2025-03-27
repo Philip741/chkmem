@@ -24,21 +24,27 @@ pub fn main() !void {
 }
 
 fn getCachedMemory(allocator: std.mem.Allocator) !u64 {
-    const file = std.fs.openFileAbsolute("/proc/meminfo", .{});
-    defer file.close;
+    const file = try std.fs.openFileAbsolute("/proc/meminfo", .{});
+    defer file.close();
+
+    //const reader = file.reader();
 
     var bufferedReader = std.io.bufferedReader(file.reader());
     const reader = bufferedReader.reader();
+
     const content = try reader.readAllAlloc(allocator, 16 * 1024);
     defer allocator.free(content);
 
     //split content into lines and search for cached
-    var lines = std.mem.tokenizeScalar(u8, content, "\n");
+    var lines = std.mem.tokenizeScalar(u8, content, '\n');
+    //if (iter.next()) |token| {
+    //  std.debug.print("token: {s}\n", .{token});
+    //}
     while (lines.next()) |line| {
         if (std.mem.startsWith(u8, line, "Cached:")) {
             //parse the number value
             var iter = std.mem.tokenizeAny(u8, line, " \t:");
-            std.debug.print("mem token line {}", .{iter}); // not sure if this will work
+            std.debug.print("line output: {s}\n", .{line});
             _ = iter.next(); // skip cached token
             // get the value in kb
             if (iter.next()) |value| {
