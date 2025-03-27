@@ -19,12 +19,40 @@ pub fn main() !void {
         printUsage(args[0]);
     }
 
-    try executeArgs(args);
+    try executeArgs(args, arena.allocator());
     // using try bubbles up the error to the containing function
 }
+
+fn getCachedMemory(allocator: std.mem.Allocator) !u64 {
+    const file = std.fs.openFileAbsolute("/proc/meminfo", .{});
+    defer file.close;
+
+    var bufferedReader = std.io.bufferedReader(file.reader());
+    const reader = bufferedReader.reader();
+    const content = try reader.readAllAlloc(allocator, 16 * 1024);
+    defer allocator.free(content);
+
+    //split content into lines and search for cached
+    var lines = std.mem.tokenizeScalar(u8, content, "\n");
+    while (lines.next()) |line| {
+        if (std.mem.startsWith(u8, line, "Cached:")) {
+            //parse the number value
+            var iter = std.mem.tokenizeAny(u8, line, " \t:");
+            std.debug.print("mem token line {}", .{iter}); // not sure if this will work
+            _ = iter.next(); // skip cached token
+            // get the value in kb
+            if (iter.next()) |value| {
+                // the value of 10 is the base type
+                return try std.fmt.parseInt(u64, value, 10);
+            }
+        }
+    }
+    return error.cachedMemoryNotFound;
+}
 // []const []const u8 is a slice of slices , []const u8 is a string in zig
-fn executeArgs(args: []const []const u8) !void {
+fn executeArgs(args: []const []const u8, allocator: std.mem.Allocator) !void {
     const systemRam: u64 = try std.process.totalSystemMemory();
+    const systemCache: u64 = try getCachedMemory(allocator);
     const ramMb = systemRam / (1024 * 1024);
     const ramKb = systemRam / 1024;
 
@@ -37,6 +65,8 @@ fn executeArgs(args: []const []const u8) !void {
             std.debug.print("Total system RAM KB: {}\n", .{ramKb});
         } else if (std.mem.eql(u8, arg, "-mb")) {
             std.debug.print("Total system RAM MB: {}\n", .{ramMb});
+        } else if (std.mem.eql(u8, arg, "-cached")) {
+            std.debug.print("Total system cache KB: {}\n", .{systemCache});
         } else {
             std.debug.print("Unknown argument: {s}\n", .{arg});
             printUsage(args[0]);
@@ -50,5 +80,6 @@ fn printUsage(program_name: []const u8) void {
     std.debug.print("  -total - Print total RAM in bytes\n", .{});
     std.debug.print("  -kb    - Print total RAM in kilobytes\n", .{});
     std.debug.print("  -mb    - Print total RAM in megabytes\n", .{});
+    std.debug.print("  -cached    - Print total Cached RAM in Kilobytes\n", .{});
     std.debug.print("Example: {s} total kb mb\n", .{program_name});
 }
