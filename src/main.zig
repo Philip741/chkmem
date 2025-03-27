@@ -5,10 +5,7 @@ pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
     const allocator = gpa.allocator();
     defer _ = gpa.deinit();
-    //defer {
-    //  const deinit_status = gpa.deinit();
-    //if (deinit_status == .leak) std.debug.print("Memory leak detected\n ",.{});
-    //}
+
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
 
@@ -37,14 +34,11 @@ fn getCachedMemory(allocator: std.mem.Allocator) !u64 {
 
     //split content into lines and search for cached
     var lines = std.mem.tokenizeScalar(u8, content, '\n');
-    //if (iter.next()) |token| {
-    //  std.debug.print("token: {s}\n", .{token});
-    //}
     while (lines.next()) |line| {
         if (std.mem.startsWith(u8, line, "Cached:")) {
             //parse the number value
             var iter = std.mem.tokenizeAny(u8, line, " \t:");
-            std.debug.print("line output: {s}\n", .{line});
+            //std.debug.print("line output: {s}\n", .{line});
             _ = iter.next(); // skip cached token
             // get the value in kb
             if (iter.next()) |value| {
