@@ -48,8 +48,6 @@ You can combine multiple options. For example:
 memcli -total -mb
 ```
 
-This will display the total system memory in megabytes.
-
 ### Examples
 
 1. Basic usage (default output):
