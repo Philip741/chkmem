@@ -1,5 +1,12 @@
 const std = @import("std");
 
+const MemoryInfoError = error{
+    CachedMemoryNotFound,
+    AvailableMemoryNotFound,
+    FileSystemError, // General filesystem errors
+    AllocationError,
+};
+
 pub fn main() !void {
     // var gpa = std.heap.GeneralPurposeAllocator.init(.{});
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -11,9 +18,10 @@ pub fn main() !void {
 
     const args = try std.process.argsAlloc(arena.allocator());
 
-    // print help usage if only command is supplied
-    if (args.len < 2) {
+    // print help usage if only command is supplied or -h is used
+    if (args.len < 2 or (args.len == 2 and std.mem.eql(u8, args[1], "-h"))) {
         printUsage(args[0]);
+        return; //exit after printing usage
     }
 
     try executeArgs(args, arena.allocator());
@@ -80,6 +88,7 @@ fn printUsage(program_name: []const u8) void {
     std.debug.print("  -total - Print total RAM in bytes\n", .{});
     std.debug.print("  -kb    - Print total RAM in kilobytes\n", .{});
     std.debug.print("  -mb    - Print total RAM in megabytes\n", .{});
-    std.debug.print("  -cached    - Print total Cached RAM in Kilobytes\n", .{});
+    std.debug.print("  -cached  - Print total Cached RAM in Kilobytes\n", .{});
+    std.debug.print("  -h    - Print these usage options\n", .{});
     std.debug.print("Example: {s} total kb mb\n", .{program_name});
 }
