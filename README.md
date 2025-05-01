@@ -75,7 +75,6 @@ memcli -total -mb
    ```
 
 
-This will produce a debug build of the `memcli` executable in the `zig-out/bin` directory.
 
 ## License
 
